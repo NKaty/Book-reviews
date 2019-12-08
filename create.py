@@ -12,6 +12,10 @@ def main():
                                     title VARCHAR NOT NULL,\
                                     author VARCHAR NOT NULL,\
                                     year SMALLINT NOT NULL)')
+
+    db.execute('CREATE TABLE users (id SERIAL PRIMARY KEY,\
+                                    username VARCHAR UNIQUE NOT NULL\
+                                    password VARCHAR NOT NULL)')
     print('The table "books" is created.')
     db.commit()
 
