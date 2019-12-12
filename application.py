@@ -36,7 +36,7 @@ def signup():
 
     username = request.form.get('username')
     password = request.form.get('password')
-    conf_password = request.form.get('conf_password')
+    conf_password = request.form.get('conf-password')
 
     if not username or not password or not conf_password:
         return render_template('signup.html', error_message='All fields of the form must be filled in!')
