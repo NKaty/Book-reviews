@@ -57,7 +57,7 @@ def signup():
                                error_message='That username is already taken. Please, choose another username!')
 
     db.execute('INSERT INTO users (username, password) VALUES (:username, :password)',
-               {'username': username, password: generate_password_hash(password)})
+               {'username': username, 'password': generate_password_hash(password)})
     db.commit()
 
     user = db.execute('SELECT * FROM users WHERE username = :username', {'username': username}).fetchone()
@@ -68,7 +68,7 @@ def signup():
     session['user_id'] = user.id
     session['username'] = user.username
 
-    redirect('/search')
+    return redirect('/')
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -92,10 +92,10 @@ def login():
     session['user_id'] = user.id
     session['username'] = user.username
 
-    redirect('/search')
+    return redirect('/')
 
 
 @app.route('/logout')
 def logout():
     session.clear()
-    redirect('/')
+    return redirect('/')
