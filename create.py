@@ -17,10 +17,20 @@ def main():
                                     author VARCHAR NOT NULL,\
                                     year SMALLINT NOT NULL)')
     print('The table "books" is created.')
+
     db.execute('CREATE TABLE users (id SERIAL PRIMARY KEY,\
                                     username VARCHAR UNIQUE NOT NULL,\
                                     password VARCHAR NOT NULL)')
     print('The table "users" is created.')
+
+    db.execute('CREATE TABLE reviews (id SERIAL PRIMARY KEY,\
+                                        book_isbn VARCHAR REFERENCES books,\
+                                        user_id INTEGER REFERENCES users,\
+                                        rating SMALLINT NOT NULL CHECK (rating <= 5 AND rating >= 1),\
+                                        comment VARCHAR,\
+                                        created_on TIMESTAMP NOT NULL)')
+    print('The table "reviews" is created.')
+
     db.commit()
 
 
