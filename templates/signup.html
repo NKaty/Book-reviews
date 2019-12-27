@@ -13,7 +13,7 @@
 
     <div class="text-center">
         <h3>Sign up and start review books!</h3>
-        <form action="/signup" method="post">
+        <form action="{{ url_for('signup') }" method="post">
             <div class="form-group text-center">
                 <input name="username" class="form-control" placeholder="Username" autofocus required>
             </div>

@@ -99,3 +99,49 @@ def login():
 def logout():
     session.clear()
     return redirect('/')
+
+
+@app.route('/search-form', methods=['GET'])
+def search_form():
+    return render_template("search.html")
+
+
+@app.route('/search', methods=['GET'])
+def search():
+    query = {
+        'isbn': f'%{request.args.get("isbn").upper()}%',
+        'title': f'%{request.args.get("title").upper()}%',
+        'author': f'%{request.args.get("author").upper()}%',
+        'year': request.args.get('year')
+    }
+
+    try:
+        query['year'] = int(query['year'])
+    except ValueError:
+        query['year'] = None
+
+    if query['year'] is None:
+        books = db.execute("SELECT isbn, title, author, year FROM books WHERE \
+                            (UPPER(isbn) LIKE :isbn AND \
+                            UPPER(title) LIKE :title AND \
+                            UPPER(author) LIKE :author) ORDER BY title LIMIT 10",
+                           {'isbn': query['isbn'],
+                            'title': query['title'],
+                            'author': query['author']
+                            }).fetchall()
+    else:
+        books = db.execute("SELECT isbn, title, author, year FROM books WHERE \
+                            (UPPER(isbn) LIKE :isbn AND \
+                            UPPER(title) LIKE :title AND \
+                            UPPER(author) LIKE :author AND \
+                            year = :year) ORDER BY title LIMIT 10",
+                           {'isbn': query['isbn'],
+                            'title': query['title'],
+                            'author': query['author'],
+                            'year': query['year']
+                            }).fetchall()
+
+    if not len(books):
+        return render_template('search-form.html', error_message='Nothing has been found on your request!')
+
+    return render_template("books.html", books=books)

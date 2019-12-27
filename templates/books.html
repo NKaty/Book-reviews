@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block body %}
+
+    <h4>We have found for you:</h4>
+
+    <div class="card-columns">
+
+        {% for book in books %}
+            <div class="card text-center p-3">
+                <div class="card-body">
+                    <h4 class="card-text">{{book['author']}}</h4>
+                    <h5 class="card-title">{{book['title']}}</h5>
+                    <h6 class="card-text">{{book['year']}}</h6>
+                    <h6 class="card-text">{{book['isbn']}}</h6>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}
