@@ -2,6 +2,7 @@ import os
 
 from flask import Flask, session, redirect, request, render_template
 from flask_session import Session
+from functools import wraps
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -68,7 +69,7 @@ def signup():
     session['user_id'] = user.id
     session['username'] = user.username
 
-    return redirect('/')
+    return redirect('/search-form')
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -92,7 +93,7 @@ def login():
     session['user_id'] = user.id
     session['username'] = user.username
 
-    return redirect('/')
+    return redirect('/search-form')
 
 
 @app.route('/logout')
@@ -101,12 +102,23 @@ def logout():
     return redirect('/')
 
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('user_id') is None:
+            return redirect('/login')
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 @app.route('/search-form', methods=['GET'])
+@login_required
 def search_form():
     return render_template("search.html")
 
 
 @app.route('/search', methods=['GET'])
+@login_required
 def search():
     query = {
         'isbn': f'%{request.args.get("isbn").upper()}%',
@@ -142,6 +154,6 @@ def search():
                             }).fetchall()
 
     if not len(books):
-        return render_template('search-form.html', error_message='Nothing has been found on your request!')
+        return render_template('search.html', error_message='Nothing has been found on your request!')
 
     return render_template("books.html", books=books)
