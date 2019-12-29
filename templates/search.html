@@ -2,49 +2,40 @@
 
 {% block body %}
 
-    {% if error_message %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ error_message }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+<h3 class="text-center">Search for a book!</h3>
+<div class="row justify-content-center">
+    <form action="{{ url_for('search') }}" method="get">
+        <div class="form-group row">
+            <label for="isbn" class="col-sm-3 col-form-label">ISBN</label>
+            <div class="col-sm-2">
+                <input type="text" class="form-control" id="isbn" name="isbn">
+            </div>
         </div>
-    {% endif %}
-
-    <h3 class="text-center">Search for a book!</h3>
-    <div class="row justify-content-center">
-        <form action="{{ url_for('search') }}" method="get">
-            <div class="form-group row">
-                <label for="isbn" class="col-sm-3 col-form-label">ISBN</label>
-                <div class="col-sm-2">
-                    <input type="text" class="form-control" id="isbn" name="isbn">
-                </div>
+        <div class="form-group row">
+            <label for="title" class="col-sm-3 col-form-label">Title</label>
+            <div class="col-sm-2">
+                <input type="text" class="form-control" id="title" name="title">
             </div>
-            <div class="form-group row">
-                <label for="title" class="col-sm-3 col-form-label">Title</label>
-                <div class="col-sm-2">
-                    <input type="text" class="form-control" id="title" name="title">
-                </div>
+        </div>
+        <div class="form-group row">
+            <label for="author" class="col-sm-3 col-form-label">Author</label>
+            <div class="col-sm-2">
+                <input type="text" class="form-control" id="author" name="author">
             </div>
-            <div class="form-group row">
-                <label for="author" class="col-sm-3 col-form-label">Author</label>
-                <div class="col-sm-2">
-                    <input type="text" class="form-control" id="author" name="author">
-                </div>
+        </div>
+        <div class="form-group row">
+            <label for="year" class="col-sm-3 col-form-label">Year</label>
+            <div class="col-sm-2">
+                <input type="number" min="0" class="form-control" id="year" name="year">
             </div>
-            <div class="form-group row">
-                <label for="year" class="col-sm-3 col-form-label">Year</label>
-                <div class="col-sm-2">
-                    <input type="number" min="0" class="form-control" id="year" name="year">
-                </div>
+        </div>
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-2">
+                <button type="submit" class="btn btn-primary">Search</button>
             </div>
-            <div class="form-group row justify-content-center">
-                <div class="col-sm-2">
-                    <button type="submit" class="btn btn-primary">Search</button>
-                </div>
-            </div>
-        </form>
-    </div>
+        </div>
+    </form>
+</div>
 
 
 {% endblock %}

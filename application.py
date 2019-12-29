@@ -1,8 +1,9 @@
 import os
 
-from flask import Flask, session, redirect, request, render_template
+from flask import Flask, session, redirect, request, render_template, url_for, flash
 from flask_session import Session
 from functools import wraps
+import requests
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -40,22 +41,26 @@ def signup():
     conf_password = request.form.get('conf-password')
 
     if not username or not password or not conf_password:
-        return render_template('signup.html', error_message='All fields of the form must be filled in!')
+        flash('All fields of the form must be filled in!')
+        # return render_template('signup.html', error_message='All fields of the form must be filled in!')
 
     if len(username) < 2:
-        return render_template('signup.html', error_message='Username must be at least 2 characters long!')
+        flash('Username must be at least 2 characters long!')
+        return render_template('signup.html')
 
     if len(password) < 6:
-        return render_template('signup.html', error_message='Password must be at least 6 characters long!')
+        flash('Password must be at least 6 characters long!')
+        return render_template('signup.html')
 
     if password != conf_password:
-        return render_template('signup.html', error_message='Passwords must match!')
+        flash('Passwords must match!')
+        return render_template('signup.html')
 
     is_username_taken = db.execute('SELECT id FROM users WHERE username = :username', {'username': username}).fetchone()
 
     if is_username_taken:
-        return render_template('signup.html',
-                               error_message='That username is already taken. Please, choose another username!')
+        flash('That username is already taken. Please, choose another username!')
+        return render_template('signup.html')
 
     db.execute('INSERT INTO users (username, password) VALUES (:username, :password)',
                {'username': username, 'password': generate_password_hash(password)})
@@ -64,7 +69,8 @@ def signup():
     user = db.execute('SELECT * FROM users WHERE username = :username', {'username': username}).fetchone()
 
     if user is None:
-        return render_template('signup.html', error_message='An error occurred during registration. Please try again!')
+        flash('An error occurred during registration. Please try again!')
+        return render_template('signup.html')
 
     session['user_id'] = user.id
     session['username'] = user.username
@@ -83,12 +89,14 @@ def login():
     password = request.form.get('password')
 
     if not username or not password:
-        return render_template('login.html', error_message='All fields of the form must be filled in!')
+        flash('All fields of the form must be filled in!')
+        return render_template('login.html')
 
     user = db.execute('SELECT * FROM users WHERE username = :username', {'username': username}).fetchone()
 
     if user is None or not check_password_hash(user.password, password):
-        return render_template('login.html', error_message='Invalid password or username!')
+        flash('Invalid password or username!')
+        return render_template('login.html')
 
     session['user_id'] = user.id
     session['username'] = user.username
@@ -108,6 +116,7 @@ def login_required(f):
         if session.get('user_id') is None:
             return redirect('/login')
         return f(*args, **kwargs)
+
     return decorated_function
 
 
@@ -154,6 +163,52 @@ def search():
                             }).fetchall()
 
     if not len(books):
-        return render_template('search.html', error_message='Nothing has been found on your request!')
+        flash('Nothing has been found on your request!')
+        return render_template('search.html')
 
     return render_template("books.html", books=books)
+
+
+@app.route('/book/<isbn>', methods=['GET', 'POST'])
+@login_required
+def book(isbn):
+    if request.method == 'GET':
+        book_data = db.execute('SELECT isbn, title, author, year, \
+                                        reviews.rating, reviews.comment, reviews.created_on, \
+                                        users.username \
+                                        FROM books \
+                                        INNER JOIN reviews ON reviews.book_isbn = books.isbn \
+                                        INNER JOIN users ON users.id = reviews.user_id \
+                                        WHERE books.isbn = :isbn',
+                               {"isbn": isbn}).fetchall()
+
+        # request to Goodreads API
+        if len(book_data):
+            rating_data = requests.get('https://www.goodreads.com/book/review_counts.json', params={
+                'key': os.getenv('GOODREADS_KEY'),
+                'isbns': isbn
+            }).json()['books'][0]
+
+        print(book_data)
+        print(rating_data)
+
+        return render_template('book.html', book_data=book_data, rating_data=rating_data)
+
+    rating = request.form.get('rating')
+    comment = request.form.get('comment')
+
+    id = db.execute('INSERT INTO reviews (book_isbn, user_id, rating, comment) \
+                VALUES (:book_isbn, :user_id, :rating, :comment) \
+                ON CONFLICT ON CONSTRAINT review_user_book_unique \
+                DO NOTHING \
+                RETURNING id',
+                    {'book_isbn': isbn,
+                     'user_id': session.get('user_id'),
+                     'rating': rating,
+                     'comment': comment}).fetchone()
+    db.commit()
+
+    if id is None:
+        flash('You already submitted a review for this book')
+
+    return redirect(url_for('book', isbn=isbn))
