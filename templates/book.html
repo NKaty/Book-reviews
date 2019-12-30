@@ -4,16 +4,16 @@
 
 <div class="container row">
     <div class="col-sm-6">
-        <h1>{{ book_data['title'] }}</h1>
-        <h3>Author: {{ book_data['author'] }}</h3>
-        <h4>Published: {{ book_data['year'] }}</h4>
-        <h5>ISBN: {{ book_data['isbn'] }}</h5>
+        <h1>{{ book_data[0]['title'] }}</h1>
+        <h3>Author: {{ book_data[0]['author'] }}</h3>
+        <h4>Published: {{ book_data[0]['year'] }}</h4>
+        <h5>ISBN: {{ book_data[0]['isbn'] }}</h5>
     </div>
 
     <div class="col-sm-6">
         <h2>Goodread.com rating:</h2>
-        <h3>Average Rating: {{ rating_data['average_rating'] }}</h3>
-        <h5>Number of Ratings: {{ rating_data['work_ratings_count'] }}}</h5>
+        <h3>Average Rating: {{ 'No information' if rating_data == None else rating_data['average_rating'] }}</h3>
+        <h5>Number of Ratings: {{ 'No information' if rating_data == None else rating_data['work_ratings_count'] }}</h5>
     </div>
 </div>
 
@@ -42,4 +42,21 @@
         </div>
     </form>
 </div>
+
+<div>
+    <h3>{{ '0' if book_data == None else book_data|length }} Reviews:</h3>
+    <div class="list-group">
+        {% for review in book_data %}
+        <div class="list-group-item">
+            <div class="d-flex w-100 justify-content-between">
+                <p class="mb-1">{{ review['username'] }}</p>
+                <small>{{ review['created_on'] }}</small>
+            </div>
+            <h5 class="mb-1">{{ review['comment'] or "The user didn't leave the review." }}</h5>
+            <small>Rating: {{ review['rating'] }}</small>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
 {% endblock %}
