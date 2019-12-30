@@ -42,7 +42,7 @@ def signup():
 
     if not username or not password or not conf_password:
         flash('All fields of the form must be filled in!')
-        # return render_template('signup.html', error_message='All fields of the form must be filled in!')
+        return render_template('signup.html')
 
     if len(username) < 2:
         flash('Username must be at least 2 characters long!')
@@ -56,20 +56,16 @@ def signup():
         flash('Passwords must match!')
         return render_template('signup.html')
 
-    is_username_taken = db.execute('SELECT id FROM users WHERE username = :username', {'username': username}).fetchone()
-
-    if is_username_taken:
-        flash('That username is already taken. Please, choose another username!')
-        return render_template('signup.html')
-
-    db.execute('INSERT INTO users (username, password) VALUES (:username, :password)',
-               {'username': username, 'password': generate_password_hash(password)})
+    user = db.execute('INSERT INTO users (username, password) \
+                        VALUES (:username, :password) \
+                        ON CONFLICT ON CONSTRAINT users_username_key \
+                        DO NOTHING \
+                        RETURNING id, username',
+                      {'username': username, 'password': generate_password_hash(password)}).fetchone()
     db.commit()
 
-    user = db.execute('SELECT * FROM users WHERE username = :username', {'username': username}).fetchone()
-
     if user is None:
-        flash('An error occurred during registration. Please try again!')
+        flash('That username is already taken. Please, choose another username!')
         return render_template('signup.html')
 
     session['user_id'] = user.id
@@ -185,6 +181,7 @@ def book(isbn):
                                {"isbn": isbn}).fetchall()
 
         # request to Goodreads API
+        print(book_data)
         if len(book_data):
             try:
                 rating_data = requests.get('https://www.goodreads.com/book/review_counts.json', params={
@@ -197,7 +194,7 @@ def book(isbn):
 
         else:
             flash(f'There is no book with isbn {isbn}. Please, try again.')
-            return redirect(url_for('search-form'))
+            return redirect(url_for('search_form'))
 
         return render_template('book.html', book_data=book_data, rating_data=rating_data)
 
