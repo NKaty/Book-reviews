@@ -44,8 +44,9 @@
 </div>
 
 <div>
-    <h3>{{ '0' if book_data == None else book_data|length }} Reviews:</h3>
+    <h3>{{ 'No reviews yet' if book_data[0]['username'] == None else book_data|length ~ ' Review' ~ ('s' if book_data|length > 1) }}</h3>
     <div class="list-group">
+        {% if book_data[0]['username'] %}
         {% for review in book_data %}
         <div class="list-group-item">
             <div class="d-flex w-100 justify-content-between">
@@ -56,6 +57,7 @@
             <small>Rating: {{ review['rating'] }}</small>
         </div>
         {% endfor %}
+        {% endif %}
     </div>
 </div>
 

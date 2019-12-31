@@ -174,14 +174,13 @@ def book(isbn):
                                 TO_CHAR(reviews.created_on, 'DD/MM/YYYY HH24:MI:SS') as created_on, \
                                 users.username \
                                 FROM books \
-                                INNER JOIN reviews ON reviews.book_isbn = books.isbn \
-                                INNER JOIN users ON users.id = reviews.user_id \
+                                LEFT JOIN reviews ON reviews.book_isbn = books.isbn \
+                                LEFT JOIN users ON users.id = reviews.user_id \
                                 WHERE books.isbn = :isbn \
                                 ORDER by created_on DESC",
                                {"isbn": isbn}).fetchall()
 
         # request to Goodreads API
-        print(book_data)
         if len(book_data):
             try:
                 rating_data = requests.get('https://www.goodreads.com/book/review_counts.json', params={
