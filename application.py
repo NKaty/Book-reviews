@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, session, redirect, request, render_template, url_for, flash
+from flask import Flask, session, redirect, request, render_template, url_for, flash, jsonify
 from flask_session import Session
 from functools import wraps
 import requests
@@ -162,7 +162,7 @@ def search():
         flash('Nothing has been found on your request!')
         return render_template('search.html')
 
-    return render_template("books.html", books=books)
+    return render_template('books.html', books=books)
 
 
 @app.route('/book/<isbn>', methods=['GET', 'POST'])
@@ -178,7 +178,7 @@ def book(isbn):
                                 LEFT JOIN users ON users.id = reviews.user_id \
                                 WHERE books.isbn = :isbn \
                                 ORDER by created_on DESC",
-                               {"isbn": isbn}).fetchall()
+                               {'isbn': isbn}).fetchall()
 
         # request to Goodreads API
         if len(book_data):
@@ -216,3 +216,22 @@ def book(isbn):
         flash('You already submitted a review for this book.')
 
     return redirect(url_for('book', isbn=isbn))
+
+
+@app.route("/api/<isbn>", methods=['GET'])
+def api_book(isbn):
+    book_data = db.execute('SELECT isbn, title, author, year, \
+                            COUNT(reviews.id) as review_count, \
+                            AVG(reviews.rating) as average_score \
+                            FROM books \
+                            LEFT JOIN reviews ON reviews.book_isbn = books.isbn \
+                            WHERE books.isbn = :isbn \
+                            GROUP BY isbn',
+                           {'isbn': isbn}).fetchone()
+
+    if book_data:
+        book_data = dict(book_data)
+        book_data['average_score'] = round(float(book_data['average_score'] or 0), 1)
+        return jsonify(book_data)
+    else:
+        return jsonify({'error': 'Invalid book ISBN'}), 404
