@@ -123,8 +123,10 @@ def search_form():
 
 
 @app.route('/search', methods=['GET'])
+@app.route('/books/<int:page>', defaults={'page': 1}, methods=['GET'])
 @login_required
-def search():
+def search(page):
+    per_page = 10
     query = {
         'isbn': f'%{request.args.get("isbn").upper()}%',
         'title': f'%{request.args.get("title").upper()}%',
@@ -137,25 +139,53 @@ def search():
     except ValueError:
         query['year'] = None
 
+    offset = ((int(page) - 1) * per_page)
+
     if query['year'] is None:
-        books = db.execute("SELECT isbn, title, author, year FROM books WHERE \
+        count = db.execute('SELECT COUNT(*) FROM books WHERE \
                             (UPPER(isbn) LIKE :isbn AND \
                             UPPER(title) LIKE :title AND \
-                            UPPER(author) LIKE :author) ORDER BY title LIMIT 10",
+                            UPPER(author) LIKE :author)',
                            {'isbn': query['isbn'],
                             'title': query['title'],
                             'author': query['author']
-                            }).fetchall()
-    else:
-        books = db.execute("SELECT isbn, title, author, year FROM books WHERE \
+                            }).fetchone()
+
+        books = db.execute('SELECT isbn, title, author, year FROM books WHERE \
                             (UPPER(isbn) LIKE :isbn AND \
                             UPPER(title) LIKE :title AND \
-                            UPPER(author) LIKE :author AND \
-                            year = :year) ORDER BY title LIMIT 10",
+                            UPPER(author) LIKE :author) \
+                            ORDER BY title OFFSET :offset LIMIT :per_page',
                            {'isbn': query['isbn'],
                             'title': query['title'],
                             'author': query['author'],
-                            'year': query['year']
+                            'offset': offset,
+                            'per_page': per_page
+                            }).fetchall()
+        print(count)
+    else:
+        count = db.execute('SELECT COUNT(*) FROM books WHERE \
+                            (UPPER(isbn) LIKE :isbn AND \
+                            UPPER(title) LIKE :title AND \
+                            UPPER(author) LIKE :author) \
+                            year = :year)',
+                           {'isbn': query['isbn'],
+                            'title': query['title'],
+                            'author': query['author']
+                            }).fetchone()
+
+        books = db.execute('SELECT isbn, title, author, year FROM books WHERE \
+                            (UPPER(isbn) LIKE :isbn AND \
+                            UPPER(title) LIKE :title AND \
+                            UPPER(author) LIKE :author AND \
+                            year = :year) \
+                            ORDER BY title OFFSET :offset LIMIT :per_page',
+                           {'isbn': query['isbn'],
+                            'title': query['title'],
+                            'author': query['author'],
+                            'year': query['year'],
+                            'offset': offset,
+                            'per_page': per_page
                             }).fetchall()
 
     if not len(books):
