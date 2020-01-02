@@ -1,3 +1,4 @@
+import math
 import os
 
 from flask import Flask, session, redirect, request, render_template, url_for, flash, jsonify
@@ -122,11 +123,13 @@ def search_form():
     return render_template("search.html")
 
 
-@app.route('/search', methods=['GET'])
-@app.route('/books/<int:page>', defaults={'page': 1}, methods=['GET'])
+@app.route('/search/<int:page>', methods=['GET'])
 @login_required
 def search(page):
     per_page = 10
+    page = int(page)
+    offset = ((page - 1) * per_page)
+
     query = {
         'isbn': f'%{request.args.get("isbn").upper()}%',
         'title': f'%{request.args.get("title").upper()}%',
@@ -139,10 +142,8 @@ def search(page):
     except ValueError:
         query['year'] = None
 
-    offset = ((int(page) - 1) * per_page)
-
-    if query['year'] is None:
-        count = db.execute('SELECT COUNT(*) FROM books WHERE \
+    if session.get('query')['year'] is None:
+        total = db.execute('SELECT COUNT(*) FROM books WHERE \
                             (UPPER(isbn) LIKE :isbn AND \
                             UPPER(title) LIKE :title AND \
                             UPPER(author) LIKE :author)',
@@ -150,6 +151,10 @@ def search(page):
                             'title': query['title'],
                             'author': query['author']
                             }).fetchone()
+
+        if not total:
+            flash('Nothing has been found on your request!')
+            return render_template('search.html')
 
         books = db.execute('SELECT isbn, title, author, year FROM books WHERE \
                             (UPPER(isbn) LIKE :isbn AND \
@@ -162,9 +167,9 @@ def search(page):
                             'offset': offset,
                             'per_page': per_page
                             }).fetchall()
-        print(count)
+        print(total)
     else:
-        count = db.execute('SELECT COUNT(*) FROM books WHERE \
+        total = db.execute('SELECT COUNT(*) FROM books WHERE \
                             (UPPER(isbn) LIKE :isbn AND \
                             UPPER(title) LIKE :title AND \
                             UPPER(author) LIKE :author) \
@@ -173,6 +178,10 @@ def search(page):
                             'title': query['title'],
                             'author': query['author']
                             }).fetchone()
+
+        if not total:
+            flash('Nothing has been found on your request!')
+            return render_template('search.html')
 
         books = db.execute('SELECT isbn, title, author, year FROM books WHERE \
                             (UPPER(isbn) LIKE :isbn AND \
@@ -188,11 +197,18 @@ def search(page):
                             'per_page': per_page
                             }).fetchall()
 
+    # 404
     if not len(books):
         flash('Nothing has been found on your request!')
         return render_template('search.html')
 
-    return render_template('books.html', books=books)
+    pages = int(math.ceil(total[0] / float(per_page)))
+    pagination = {'pages': pages,
+                  'previous': page - 1 if page > 1 else None,
+                  'next': page + 1 if page < pages else None,
+                  'page': page}
+
+    return render_template('books.html', books=books, pagination=pagination, query_params=dict(request.args))
 
 
 @app.route('/book/<isbn>', methods=['GET', 'POST'])
