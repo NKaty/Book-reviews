@@ -1,7 +1,7 @@
 import math
 import os
 
-from flask import Flask, session, redirect, request, render_template, url_for, flash, jsonify
+from flask import Flask, session, redirect, request, render_template, url_for, flash, jsonify, abort
 from flask_session import Session
 from functools import wraps
 import requests
@@ -23,6 +23,16 @@ Session(app)
 # Set up database
 engine = create_engine(os.getenv('DATABASE_URL'))
 db = scoped_session(sessionmaker(bind=engine))
+
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template('500.html'), 500
 
 
 @app.route('/')
@@ -221,7 +231,7 @@ def search(page):
                             }).fetchall()
 
     if not len(books):
-        return render_template('404.html')
+        return abort(404)
 
     pages = int(math.ceil(total / per_page))
 
@@ -260,8 +270,7 @@ def book(isbn):
                 rating_data = None
 
         else:
-            flash(f'There is no book with isbn {isbn}. Please, try again.')
-            return redirect(url_for('search_form'))
+            return abort(404)
 
         return render_template('book.html', book_data=book_data, rating_data=rating_data)
 
@@ -281,7 +290,7 @@ def book(isbn):
     db.commit()
 
     if review_id is None:
-        flash('You already submitted a review for this book.')
+        flash('You have already submitted a review for this book.')
 
     return redirect(url_for('book', isbn=isbn))
 
