@@ -123,12 +123,34 @@ def search_form():
     return render_template("search.html")
 
 
+def get_pagination(page, total, neighbours_number):
+    arrow_block_len = neighbours_number * 2 + 3
+    pagination_len = arrow_block_len + 2
+    if pagination_len >= total:
+        return list(range(1, total + 1))
+
+    start_page = max(2, page - neighbours_number)
+    end_page = min(total - 1, page + neighbours_number)
+    pages = list(range(start_page, end_page + 1))
+    to_fill = arrow_block_len - len(pages) - 1
+
+    if start_page > 2 and total - end_page > 1:
+        pages = ['&laquo;'] + pages + ['&raquo;']
+    elif start_page > 2:
+        pages = ['&laquo;'] + list(range(start_page - to_fill, start_page)) + pages
+    else:
+        pages = pages + list(range(end_page + 1, end_page + to_fill + 1)) + ['&raquo;']
+
+    return [1] + pages + [total]
+
+
+@app.route('/search/', defaults={'page': 1}, methods=['GET'])
 @app.route('/search/<int:page>', methods=['GET'])
 @login_required
 def search(page):
     per_page = 10
-    page = int(page)
     offset = ((page - 1) * per_page)
+    neighbours_number = 1
 
     query = {
         'isbn': f'%{request.args.get("isbn").upper()}%',
@@ -142,7 +164,7 @@ def search(page):
     except ValueError:
         query['year'] = None
 
-    if session.get('query')['year'] is None:
+    if query['year'] is None:
         total = db.execute('SELECT COUNT(*) FROM books WHERE \
                             (UPPER(isbn) LIKE :isbn AND \
                             UPPER(title) LIKE :title AND \
@@ -150,7 +172,7 @@ def search(page):
                            {'isbn': query['isbn'],
                             'title': query['title'],
                             'author': query['author']
-                            }).fetchone()
+                            }).fetchone()[0]
 
         if not total:
             flash('Nothing has been found on your request!')
@@ -167,17 +189,18 @@ def search(page):
                             'offset': offset,
                             'per_page': per_page
                             }).fetchall()
-        print(total)
+
     else:
         total = db.execute('SELECT COUNT(*) FROM books WHERE \
                             (UPPER(isbn) LIKE :isbn AND \
                             UPPER(title) LIKE :title AND \
-                            UPPER(author) LIKE :author) \
+                            UPPER(author) LIKE :author AND \
                             year = :year)',
                            {'isbn': query['isbn'],
                             'title': query['title'],
-                            'author': query['author']
-                            }).fetchone()
+                            'author': query['author'],
+                            'year': query['year']
+                            }).fetchone()[0]
 
         if not total:
             flash('Nothing has been found on your request!')
@@ -197,16 +220,15 @@ def search(page):
                             'per_page': per_page
                             }).fetchall()
 
-    # 404
     if not len(books):
-        flash('Nothing has been found on your request!')
-        return render_template('search.html')
+        return render_template('404.html')
 
-    pages = int(math.ceil(total[0] / float(per_page)))
+    pages = int(math.ceil(total / per_page))
+
     pagination = {'pages': pages,
-                  'previous': page - 1 if page > 1 else None,
-                  'next': page + 1 if page < pages else None,
-                  'page': page}
+                  'items': get_pagination(page, pages, neighbours_number),
+                  'page': page,
+                  'neighbours_number': neighbours_number}
 
     return render_template('books.html', books=books, pagination=pagination, query_params=dict(request.args))
 

@@ -22,23 +22,33 @@
 <nav aria-label="pagination">
     <ul class="pagination justify-content-center">
 
-        {% if pagination['previous'] != None %}
+        {% for item in pagination['items'] %}
+        {% if item == '&laquo;' %}
         <li class="page-item">
-            <a class="page-link" href="{{ url_for('search', page=pagination['previous'], **query_params) }}">Previous</a>
+            <a class="page-link"
+               href="{{ url_for('search', page=pagination['page'] - pagination['neighbours_number'] * 2 - 1, **query_params) }}"
+               aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
         </li>
-        {% else %}
-        <li class="page-item disabled"><span class="page-link">Previous</span></li>
-        {% endif %}
 
-        <li class="page-item active"><span class="page-link">{{ pagination['page'] }}</span></li>
-
-        {% if pagination['next'] != None %}
+        {% elif item == '&raquo;' %}
         <li class="page-item">
-            <a class="page-link" href="{{ url_for('search', page=pagination['next'], **query_params) }}">Next</a>
+            <a class="page-link"
+               href="{{ url_for('search', page=pagination['page'] + pagination['neighbours_number'] * 2 + 1, **query_params) }}"
+               aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
         </li>
+
+        {% elif item == pagination['page'] %}
+        <li class="page-item active"><span class="page-link">{{ item }}</span></li>
         {% else %}
-        <li class="page-item disabled"><span class="page-link">Next</span></li>
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('search', page=item, **query_params) }}">{{ item }}</a>
+        </li>
         {% endif %}
+        {% endfor %}
 
     </ul>
 </nav>
