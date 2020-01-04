@@ -52,19 +52,19 @@ def signup():
     conf_password = request.form.get('conf-password')
 
     if not username or not password or not conf_password:
-        flash('All fields of the form must be filled in!')
+        flash('All fields of the form must be filled in!', 'danger')
         return render_template('signup.html')
 
     if len(username) < 2:
-        flash('Username must be at least 2 characters long!')
+        flash('Username must be at least 2 characters long!', 'danger')
         return render_template('signup.html')
 
     if len(password) < 6:
-        flash('Password must be at least 6 characters long!')
+        flash('Password must be at least 6 characters long!', 'danger')
         return render_template('signup.html')
 
     if password != conf_password:
-        flash('Passwords must match!')
+        flash('Passwords must match!', 'danger')
         return render_template('signup.html')
 
     user = db.execute('INSERT INTO users (username, password) \
@@ -76,12 +76,13 @@ def signup():
     db.commit()
 
     if user is None:
-        flash('That username is already taken. Please, choose another username!')
+        flash('That username is already taken. Please, choose another username!', 'danger')
         return render_template('signup.html')
 
     session['user_id'] = user.id
     session['username'] = user.username
 
+    flash('Congratulations, you are now a registered user!', 'success')
     return redirect('/search-form')
 
 
@@ -96,35 +97,39 @@ def login():
     password = request.form.get('password')
 
     if not username or not password:
-        flash('All fields of the form must be filled in!')
+        flash('All fields of the form must be filled in!', 'danger')
         return render_template('login.html')
 
     user = db.execute('SELECT * FROM users WHERE username = :username', {'username': username}).fetchone()
 
     if user is None or not check_password_hash(user.password, password):
-        flash('Invalid password or username!')
+        flash('Invalid password or username!', 'danger')
         return render_template('login.html')
 
     session['user_id'] = user.id
     session['username'] = user.username
 
+    flash('You were logged in.', 'success')
     return redirect('/search-form')
-
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect('/')
 
 
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if session.get('user_id') is None:
+            flash('You need to login first.', 'danger')
             return redirect('/login')
         return f(*args, **kwargs)
 
     return decorated_function
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    session.clear()
+    flash('You were logged out.', 'success')
+    return redirect('/')
 
 
 @app.route('/search-form', methods=['GET'])
@@ -185,7 +190,7 @@ def search(page):
                             }).fetchone()[0]
 
         if not total:
-            flash('Nothing has been found on your request!')
+            flash('Nothing has been found on your request!', 'warning')
             return render_template('search.html')
 
         books = db.execute('SELECT isbn, title, author, year FROM books WHERE \
@@ -213,7 +218,7 @@ def search(page):
                             }).fetchone()[0]
 
         if not total:
-            flash('Nothing has been found on your request!')
+            flash('Nothing has been found on your request!', 'warning')
             return render_template('search.html')
 
         books = db.execute('SELECT isbn, title, author, year FROM books WHERE \
@@ -266,7 +271,7 @@ def book(isbn):
                     'isbns': isbn
                 }).json()['books'][0]
             except Exception:
-                flash('Unfortunately we cannot get information from goodreads.com.')
+                flash('Unfortunately we cannot get information from goodreads.com.', 'warning')
                 rating_data = None
 
         else:
@@ -290,7 +295,7 @@ def book(isbn):
     db.commit()
 
     if review_id is None:
-        flash('You have already submitted a review for this book.')
+        flash('You have already submitted a review for this book.', 'danger')
 
     return redirect(url_for('book', isbn=isbn))
 
