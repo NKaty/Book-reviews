@@ -7,6 +7,7 @@ from functools import wraps
 import requests
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from urllib.parse import urlsplit
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__, template_folder='templates')
@@ -40,9 +41,21 @@ def index():
     return render_template("index.html")
 
 
+def is_safe_url(url):
+    if url is None or url.strip() == '':
+        return False
+    url_next = urlsplit(url)
+    url_base = urlsplit(request.host_url)
+    if (url_next.netloc or url_next.scheme) and \
+            url_next.netloc != url_base.netloc:
+        return False
+    return True
+
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    session.clear()
+    if session.get('user_id'):
+        return redirect(url_for('search_form'))
 
     if request.method == 'GET':
         return render_template('signup.html')
@@ -81,16 +94,23 @@ def signup():
 
     session['user_id'] = user.id
     session['username'] = user.username
+    next_url = session.get('next_url')
+    session['next_url'] = None
+
+    if not is_safe_url(next_url):
+        next_url = None
 
     flash('Congratulations, you are now a registered user!', 'success')
-    return redirect('/search-form')
+    return redirect(next_url or url_for('search_form'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    session.clear()
+    if session.get('user_id'):
+        return redirect(url_for('search_form'))
 
     if request.method == 'GET':
+        session['next_url'] = request.args.get('next')
         return render_template('login.html')
 
     username = request.form.get('username')
@@ -108,9 +128,14 @@ def login():
 
     session['user_id'] = user.id
     session['username'] = user.username
+    next_url = session.get('next_url')
+    session['next_url'] = None
+
+    if not is_safe_url(next_url):
+        next_url = None
 
     flash('You were logged in.', 'success')
-    return redirect('/search-form')
+    return redirect(next_url or url_for('search_form'))
 
 
 def login_required(f):
@@ -118,7 +143,7 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if session.get('user_id') is None:
             flash('You need to login first.', 'danger')
-            return redirect('/login')
+            return redirect(url_for('login', next=request.url))
         return f(*args, **kwargs)
 
     return decorated_function
@@ -129,11 +154,10 @@ def login_required(f):
 def logout():
     session.clear()
     flash('You were logged out.', 'success')
-    return redirect('/')
+    return redirect(url_for('index'))
 
 
 @app.route('/search-form', methods=['GET'])
-@login_required
 def search_form():
     return render_template("search.html")
 
@@ -161,7 +185,6 @@ def get_pagination(page, total, neighbours_number):
 
 @app.route('/search/', defaults={'page': 1}, methods=['GET'])
 @app.route('/search/<int:page>', methods=['GET'])
-@login_required
 def search(page):
     per_page = 10
     offset = ((page - 1) * per_page)
