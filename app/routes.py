@@ -1,55 +1,20 @@
 import math
 import os
 
-from flask import Flask, session, redirect, request, render_template, url_for, flash, jsonify, abort
-from flask_session import Session
-from functools import wraps
+from flask import session, redirect, request, render_template, url_for, flash, jsonify, abort
 import requests
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
-from urllib.parse import urlsplit
 from werkzeug.security import check_password_hash, generate_password_hash
 
-app = Flask(__name__, template_folder='templates')
-
-# Check for environment variable
-if not os.getenv('DATABASE_URL'):
-    raise RuntimeError('DATABASE_URL is not set')
-
-# Configure session to use filesystem
-app.config['SESSION_PERMANENT'] = False
-app.config['SESSION_TYPE'] = 'filesystem'
-Session(app)
-
-# Set up database
-engine = create_engine(os.getenv('DATABASE_URL'))
-db = scoped_session(sessionmaker(bind=engine))
-
-
-@app.errorhandler(404)
-def not_found_error(error):
-    return render_template('404.html'), 404
-
-
-@app.errorhandler(500)
-def internal_error(error):
-    return render_template('500.html'), 500
+from app.application import app, db
+from app.utils.pagination import get_pagination
+from app.utils.login_required_helpers import login_required
+from app.utils.login_user import login_user
+from app.utils.check_signup_form import check_signup_form
 
 
 @app.route('/')
 def index():
     return render_template("index.html")
-
-
-def is_safe_url(url):
-    if url is None or url.strip() == '':
-        return False
-    url_next = urlsplit(url)
-    url_base = urlsplit(request.host_url)
-    if (url_next.netloc or url_next.scheme) and \
-            url_next.netloc != url_base.netloc:
-        return False
-    return True
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -64,20 +29,8 @@ def signup():
     password = request.form.get('password')
     conf_password = request.form.get('conf-password')
 
-    if not username or not password or not conf_password:
-        flash('All fields of the form must be filled in!', 'danger')
-        return render_template('signup.html')
-
-    if len(username) < 2:
-        flash('Username must be at least 2 characters long!', 'danger')
-        return render_template('signup.html')
-
-    if len(password) < 6:
-        flash('Password must be at least 6 characters long!', 'danger')
-        return render_template('signup.html')
-
-    if password != conf_password:
-        flash('Passwords must match!', 'danger')
+    if len(error_messages := check_signup_form(username, password, conf_password)):
+        flash(' '.join(error_messages), 'danger')
         return render_template('signup.html')
 
     user = db.execute('INSERT INTO users (username, password) \
@@ -92,13 +45,7 @@ def signup():
         flash('That username is already taken. Please, choose another username!', 'danger')
         return render_template('signup.html')
 
-    session['user_id'] = user.id
-    session['username'] = user.username
-    next_url = session.get('next_url')
-    session['next_url'] = None
-
-    if not is_safe_url(next_url):
-        next_url = None
+    next_url = login_user(session, user)
 
     flash('Congratulations, you are now a registered user!', 'success')
     return redirect(next_url or url_for('search_form'))
@@ -126,27 +73,10 @@ def login():
         flash('Invalid password or username!', 'danger')
         return render_template('login.html')
 
-    session['user_id'] = user.id
-    session['username'] = user.username
-    next_url = session.get('next_url')
-    session['next_url'] = None
-
-    if not is_safe_url(next_url):
-        next_url = None
+    next_url = login_user(session, user)
 
     flash('You were logged in.', 'success')
     return redirect(next_url or url_for('search_form'))
-
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if session.get('user_id') is None:
-            flash('You need to login first.', 'danger')
-            return redirect(url_for('login', next=request.url))
-        return f(*args, **kwargs)
-
-    return decorated_function
 
 
 @app.route('/logout')
@@ -160,27 +90,6 @@ def logout():
 @app.route('/search-form', methods=['GET'])
 def search_form():
     return render_template("search.html")
-
-
-def get_pagination(page, total, neighbours_number):
-    arrow_block_len = neighbours_number * 2 + 3
-    pagination_len = arrow_block_len + 2
-    if pagination_len >= total:
-        return list(range(1, total + 1))
-
-    start_page = max(2, page - neighbours_number)
-    end_page = min(total - 1, page + neighbours_number)
-    pages = list(range(start_page, end_page + 1))
-    to_fill = arrow_block_len - len(pages) - 1
-
-    if start_page > 2 and total - end_page > 1:
-        pages = ['&laquo;'] + pages + ['&raquo;']
-    elif start_page > 2:
-        pages = ['&laquo;'] + list(range(start_page - to_fill, start_page)) + pages
-    else:
-        pages = pages + list(range(end_page + 1, end_page + to_fill + 1)) + ['&raquo;']
-
-    return [1] + pages + [total]
 
 
 @app.route('/search/', defaults={'page': 1}, methods=['GET'])
