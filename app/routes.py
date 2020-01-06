@@ -199,7 +199,7 @@ def book(isbn):
         if len(book_data):
             try:
                 rating_data = requests.get('https://www.goodreads.com/book/review_counts.json', params={
-                    'key': os.getenv('GOODREADS_KEY'),
+                    'key': app.config['GOODREADS_KEY'],
                     'isbns': isbn
                 }).json()['books'][0]
             except Exception:
