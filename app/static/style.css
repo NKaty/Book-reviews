@@ -3,6 +3,13 @@
     width: auto;
 }
 
+form label.error {
+    width: 100%;
+    margin: 0;
+    font-size: 80%;
+    color: #dc3545;
+}
+
 .card {
     display: inline-block;
     text-decoration: none;
