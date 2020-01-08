@@ -2,40 +2,24 @@
 
 {% block body %}
 
-<h3 class="text-center">Search for a book!</h3>
-<div class="row justify-content-center">
-    <form action="{{ url_for('search') }}" method="get">
-        <div class="form-group row">
-            <label for="isbn" class="col-sm-3 col-form-label">ISBN</label>
-            <div class="col-sm-2">
-                <input type="text" class="form-control" id="isbn" name="isbn">
-            </div>
+<div class="text-center my-5">
+    <h4 class="text-secondary mb-4">Find books easily using ISBN, title, year and author!</h4>
+    <form action="{{ url_for('search') }}" method="get" name="search">
+        <div class="form-group">
+            <input type="text" class="form-control" name="title" placeholder="Title" autofocus>
         </div>
-        <div class="form-group row">
-            <label for="title" class="col-sm-3 col-form-label">Title</label>
-            <div class="col-sm-2">
-                <input type="text" class="form-control" id="title" name="title">
-            </div>
+        <div class="form-group">
+            <input type="text" class="form-control" name="author" placeholder="Author">
         </div>
-        <div class="form-group row">
-            <label for="author" class="col-sm-3 col-form-label">Author</label>
-            <div class="col-sm-2">
-                <input type="text" class="form-control" id="author" name="author">
-            </div>
+        <div class="form-group">
+            <input type="text" class="form-control" name="year" placeholder="Year">
         </div>
-        <div class="form-group row">
-            <label for="year" class="col-sm-3 col-form-label">Year</label>
-            <div class="col-sm-2">
-                <input type="number" min="0" class="form-control" id="year" name="year">
-            </div>
+        <div class="form-group">
+            <input type="text" class="form-control" name="isbn" placeholder="ISBN">
         </div>
-        <div class="form-group row justify-content-center">
-            <div class="col-sm-2">
-                <button type="submit" class="btn btn-primary">Search</button>
-            </div>
-        </div>
+        <button type="submit" class="btn btn-info">Search</button>
     </form>
-</div>
 
+</div>
 
 {% endblock %}
