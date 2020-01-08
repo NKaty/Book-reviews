@@ -2,19 +2,19 @@
 
 {% block body %}
 
-<div class="text-center">
-    <h3>Sign up and start review books!</h3>
-    <form action="{{ url_for('signup') }}" method="post">
-        <div class="form-group text-center">
-            <input name="username" class="form-control" placeholder="Username" autofocus required>
+<div class="text-center my-5">
+    <h4 class="text-secondary mb-4">Sign up and start reviewing books!</h4>
+    <form action="{{ url_for('signup') }}" method="post" name="signup">
+        <div class="form-group">
+            <input name="username" class="form-control" placeholder="Username" autofocus>
         </div>
         <div class="form-group">
-            <input name="password" class="form-control" type=password placeholder="Password" required>
+            <input name="password" class="form-control" type=password placeholder="Password">
         </div>
         <div class="form-group">
-            <input name="conf-password" class="form-control" type=password placeholder="Confirm password" required>
+            <input name="conf-password" class="form-control" type=password placeholder="Confirm password">
         </div>
-        <button type="submit" class="btn btn-primary">Sign Up</button>
+        <button type="submit" class="btn btn-info">Sign Up</button>
     </form>
 </div>
 
