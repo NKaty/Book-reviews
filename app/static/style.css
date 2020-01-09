@@ -12,45 +12,20 @@ form label.error {
 
 .card {
     display: inline-block;
+    width: 250px;
+    margin: 10px;
     text-decoration: none;
 }
 
-a {
+a.card, a.card:hover {
     text-decoration: none;
-    color: #333;
 }
 
-a:hover {
-    text-decoration: none;
-    color: #333;
+.pagination > li a {
+    color: #17a2b8 !important;
 }
 
-@media (max-width: 575px) {
-    .card-columns {
-        column-count: 1;
-    }
-}
-
-@media (min-width: 576px) {
-    .card-columns {
-        column-count: 2;
-    }
-}
-
-@media (min-width: 768px) {
-    .card-columns {
-        column-count: 3;
-    }
-}
-
-@media (min-width: 992px) {
-    .card-columns {
-        column-count: 5;
-    }
-}
-
-@media (min-width: 1200px) {
-    .card-columns {
-        column-count: 7;
-    }
+.pagination > li.active span {
+    background-color: #17a2b8 !important;
+    border-color: #17a2b8 !important;
 }

@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="../static/style.css">
     <title>Books</title>
 </head>
-<body  class="bg-light">
+<body class="bg-light min-vh-100 d-flex flex-column">
     <nav class="navbar navbar-expand-sm navbar-dark bg-dark mb-3">
         <a class="navbar-brand mb-0 h1" href="{{ url_for('index') }}">Books</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#nav-menu"
@@ -47,7 +47,7 @@
         </div>
     </nav>
 
-    <main class="container-fluid">
+    <main class="container-fluid flex-grow-1">
         {% for message in get_flashed_messages(True) %}
         <div class="alert alert-{{ message[0] }} alert-dismissible fade show" role="alert">
             {{ message[1] }}
@@ -60,6 +60,10 @@
         {% block body %}
         {% endblock %}
     </main>
+
+    {% block footer %}
+    {% endblock %}
+
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
             integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"

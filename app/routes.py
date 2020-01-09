@@ -95,7 +95,7 @@ def search_form():
 @app.route('/search/', defaults={'page': 1}, methods=['GET'])
 @app.route('/search/<int:page>', methods=['GET'])
 def search(page):
-    per_page = 10
+    per_page = 20
     offset = ((page - 1) * per_page)
     neighbours_number = 1
 
