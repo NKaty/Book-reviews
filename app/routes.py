@@ -206,10 +206,20 @@ def book(isbn):
                 flash('Unfortunately we cannot get information from goodreads.com.', 'warning')
                 rating_data = None
 
+            # request to Open Library API
+            try:
+                desc_data = requests.get('https://openlibrary.org/api/books', params={
+                    'bibkeys': f'ISBN:{isbn}',
+                    'jscmd': 'details',
+                    'format': 'json'
+                }).json()[f'ISBN:{isbn}']['details']['description']['value'].split('--')
+            except Exception:
+                desc_data = None
+
         else:
             return abort(404)
 
-        return render_template('book.html', book_data=book_data, rating_data=rating_data)
+        return render_template('book.html', book_data=book_data, rating_data=rating_data, desc_data=desc_data)
 
     # POST request
     rating = request.form.get('rating')
