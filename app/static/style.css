@@ -29,3 +29,21 @@ a.card, a.card:hover {
     background-color: #17a2b8 !important;
     border-color: #17a2b8 !important;
 }
+
+.media {
+    max-width: 1000px;
+}
+
+.media .cover-error {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+}
+
+.media img {
+    width: 250px;
+    height: auto;
+    opacity: 0.99;
+    z-index: 1000;
+}

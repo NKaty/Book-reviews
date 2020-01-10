@@ -2,23 +2,39 @@
 
 {% block body %}
 
-<div class="container row">
-    <div class="col-sm-6">
-        <h1>{{ book_data[0]['title'] }}</h1>
-        <h3>Author: {{ book_data[0]['author'] }}</h3>
-        <h4>Published: {{ book_data[0]['year'] }}</h4>
-        <h5>ISBN: {{ book_data[0]['isbn'] }}</h5>
-    </div>
-
-    <div class="col-sm-6">
-        <h2>Goodread.com rating:</h2>
-        <h3>Average Rating: {{ 'No information' if rating_data == None else rating_data['average_rating'] }}</h3>
-        <h5>Number of Ratings: {{ 'No information' if rating_data == None else rating_data['work_ratings_count'] }}</h5>
+<div class="d-flex justify-content-center mt-4">
+    <div class="media">
+        <div class="position-relative bg-secondary mr-5 d-none d-sm-block">
+            <p class="cover-error text-white text-nowrap">No cover</p>
+            <img src="http://covers.openlibrary.org/b/isbn/{{ book_data[0]['isbn'] }}-L.jpg" alt="Cover">
+        </div>
+        <div class="media-body">
+            <h2 class="text-info">{{ book_data[0]['title'] }}</h2>
+            <h5>written by {{ book_data[0]['author'] }}</h5>
+            <h6>published in {{ book_data[0]['year'] }}</h6>
+            <h6>ISBN {{ book_data[0]['isbn'] }}</h6>
+            {% if rating_data == None %}
+            <h6>rating: no information</h6>
+            {% else %}
+            <h6>goodreads.com: rating {{ rating_data['average_rating'] }} ratings {{ rating_data['work_ratings_count']
+                }} </h6>
+            {% endif %}
+            <div class="dropdown-divider my-3"></div>
+            <h6>About the book</h6>
+            {% if desc_data == None %}
+            <p>There's no description for this book.</p>
+            {% else %}
+            <blockquote>
+                <p class="mb-0">{{ desc_data[0] }}</p>
+                <footer class="blockquote-footer">{{ desc_data[1] }}</footer>
+            </blockquote>
+            {% endif %}
+        </div>
     </div>
 </div>
 
 <div>
-    <h3>Leave your review:</h3>
+    <h4 class="text-secondary mb-4">Leave your review:</h4>
     <form action="{{ url_for('book', isbn=book_data[0]['isbn']) }}" method="post">
         <div class="form-group col-sm-6">
             <div class="input-group">
@@ -44,7 +60,8 @@
 </div>
 
 <div>
-    <h3>{{ 'No reviews yet' if book_data[0]['username'] == None else book_data|length ~ ' Review' ~ ('s' if book_data|length > 1) }}</h3>
+    <h3>{{ 'No reviews yet' if book_data[0]['username'] == None else book_data|length ~ ' Review' ~ ('s' if
+        book_data|length > 1) }}</h3>
     <div class="list-group">
         {% if book_data[0]['username'] %}
         {% for review in book_data %}
