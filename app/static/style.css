@@ -47,3 +47,40 @@ a.card, a.card:hover {
     opacity: 0.99;
     z-index: 1000;
 }
+
+.rating label {
+    margin: 0;
+    padding: 0;
+}
+
+.rating > input {
+    display: none;
+}
+
+.rating > label { 
+    color: #ddd;
+    float: right; 
+}
+
+.rating > label:before { 
+    margin: 5px;
+    font-size: 1.25em;
+    font-family: FontAwesome;
+    cursor: pointer;
+    content: "★";
+}
+
+.rating > input:checked ~ label {
+    color: #ffc700;    
+}
+.rating:not(:checked) > label:hover,
+.rating:not(:checked) > label:hover ~ label {
+    color: #deb217;  
+}
+.rating > input:checked + label:hover,
+.rating > input:checked + label:hover ~ label,
+.rating > input:checked ~ label:hover,
+.rating > input:checked ~ label:hover ~ label,
+.rating > label:hover ~ input:checked ~ label {
+    color: #c59b08;
+}

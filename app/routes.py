@@ -1,7 +1,7 @@
 import math
 import os
 
-from flask import session, redirect, request, render_template, url_for, flash, jsonify, abort
+from flask import session, redirect, request, render_template, render_template_string, url_for, flash, jsonify, abort
 import requests
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -224,6 +224,10 @@ def book(isbn):
     # POST request
     rating = request.form.get('rating')
     comment = request.form.get('comment')
+
+    if rating is None:
+        flash('You must provide your rating for the book!', 'danger')
+        return redirect(url_for('book', isbn=isbn))
 
     review_id = db.execute('INSERT INTO reviews (book_isbn, user_id, rating, comment) \
                             VALUES (:book_isbn, :user_id, :rating, :comment) \

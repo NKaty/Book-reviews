@@ -1,4 +1,5 @@
 $(function() {
+  // validate log in form
   $("form[name='login']").validate({
     rules: {
       username: "required",
@@ -13,6 +14,7 @@ $(function() {
     }
   });
   
+  // validate sign up form
   $("form[name='signup']").validate({
     rules: {
       username: {
@@ -47,6 +49,7 @@ $(function() {
     }
   });
 
+  // validate search form
   $("form[name='search']").validate({
     rules: {
       year: "digits",
@@ -62,4 +65,21 @@ $(function() {
       form.submit();
     }
   });
+
+  // validate review form
+  $(".modal").on("shown.bs.modal", function(){
+    const form = $(this).find("form[name='review']");
+    const rating = $(form).find("input[type='radio']");
+    const btn = $(form).find("button[type='submit']");
+    $(btn).prop("disabled", true);
+    rating.on("change", function () {
+      $(btn).prop("disabled", rating.filter(":checked").length < 1);
+    });
+  });
+
+  // reset review form on close
+  $(".modal").on("hidden.bs.modal", function(){
+    $(this).find("button[type='submit']").prop("disabled", true);
+    $(this).find("form")[0].reset();
+  });  
 });
