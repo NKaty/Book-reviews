@@ -196,19 +196,27 @@ def book(isbn):
                                {'isbn': isbn}).fetchall()
 
         if len(book_data):
+            total_rating = 0
             for i in range(len(book_data)):
                 book_data[i] = dict(book_data[i])
                 book_data[i]['created_on'] = book_data[i]['created_on'].split(' ')
+                total_rating += book_data[i]['rating']
+            rating_data = {
+                'books': {
+                    'average_rating': round(total_rating / len(book_data), 2),
+                    'ratings_count': len(book_data)
+                }
+            }
 
             # request to Goodreads API
             try:
-                rating_data = requests.get('https://www.goodreads.com/book/review_counts.json', params={
+                rating_data['goodreads'] = requests.get('https://www.goodreads.com/book/review_counts.json', params={
                     'key': app.config['GOODREADS_KEY'],
                     'isbns': isbn
                 }).json()['books'][0]
             except Exception:
                 flash('Unfortunately we cannot get information from goodreads.com.', 'warning')
-                rating_data = None
+                rating_data['goodreads'] = None
 
             # request to Open Library API
             try:
@@ -263,7 +271,7 @@ def api_book(isbn):
 
     if book_data:
         book_data = dict(book_data)
-        book_data['average_score'] = round(float(book_data['average_score'] or 0), 1)
+        book_data['average_score'] = round(float(book_data['average_score'] or 0), 2)
         return jsonify(book_data)
     else:
         return jsonify({'error': 'Invalid book ISBN'}), 404

@@ -55,6 +55,7 @@ a.card, a.card:hover {
 .stars {
     position: relative;
     font-size: 1em;
+    line-height: 1.25em;
     font-family: FontAwesome;
     color: #ddd;
 }
@@ -64,6 +65,7 @@ a.card, a.card:hover {
     top: 0;
     left: 0;
     font-size: 1em;
+    line-height: 1.25em;
     font-family: FontAwesome;
     color: #ffc700;
     white-space: nowrap;
