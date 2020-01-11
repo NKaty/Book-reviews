@@ -195,8 +195,12 @@ def book(isbn):
                                 ORDER by created_on DESC",
                                {'isbn': isbn}).fetchall()
 
-        # request to Goodreads API
         if len(book_data):
+            for i in range(len(book_data)):
+                book_data[i] = dict(book_data[i])
+                book_data[i]['created_on'] = book_data[i]['created_on'].split(' ')
+
+            # request to Goodreads API
             try:
                 rating_data = requests.get('https://www.goodreads.com/book/review_counts.json', params={
                     'key': app.config['GOODREADS_KEY'],

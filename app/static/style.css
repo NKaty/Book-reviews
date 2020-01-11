@@ -48,21 +48,45 @@ a.card, a.card:hover {
     z-index: 1000;
 }
 
-.rating label {
+.review-list {
+    max-width: 1000px;
+}
+
+.stars {
+    position: relative;
+    font-size: 1em;
+    font-family: FontAwesome;
+    color: #ddd;
+}
+
+.stars:after {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 1em;
+    font-family: FontAwesome;
+    color: #ffc700;
+    white-space: nowrap;
+    overflow: hidden;
+    width: calc(var(--rating) / 5 * 100%);
+    content: "★★★★★";
+}
+
+.rating-group label {
     margin: 0;
     padding: 0;
 }
 
-.rating > input {
+.rating-group > input {
     display: none;
 }
 
-.rating > label { 
+.rating-group > label { 
     color: #ddd;
     float: right; 
 }
 
-.rating > label:before { 
+.rating-group > label:before { 
     margin: 5px;
     font-size: 1.25em;
     font-family: FontAwesome;
@@ -70,17 +94,17 @@ a.card, a.card:hover {
     content: "★";
 }
 
-.rating > input:checked ~ label {
+.rating-group > input:checked ~ label {
     color: #ffc700;    
 }
-.rating:not(:checked) > label:hover,
-.rating:not(:checked) > label:hover ~ label {
+.rating-group:not(:checked) > label:hover,
+.rating-group:not(:checked) > label:hover ~ label {
     color: #deb217;  
 }
-.rating > input:checked + label:hover,
-.rating > input:checked + label:hover ~ label,
-.rating > input:checked ~ label:hover,
-.rating > input:checked ~ label:hover ~ label,
-.rating > label:hover ~ input:checked ~ label {
+.rating-group > input:checked + label:hover,
+.rating-group > input:checked + label:hover ~ label,
+.rating-group > input:checked ~ label:hover,
+.rating-group > input:checked ~ label:hover ~ label,
+.rating-group > label:hover ~ input:checked ~ label {
     color: #c59b08;
 }
