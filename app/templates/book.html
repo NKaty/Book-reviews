@@ -47,7 +47,7 @@
 </div>
 
 
-<div class="review-list mx-auto">
+<div class="review-list mx-auto mb-3">
     <h4 class="text-secondary mb-4">{{ 'No reviews yet' if book_data[0]['username'] == None else 'Reviews' }}</h4>
     <div class="list-group list-group-flush">
         {% if book_data[0]['username'] %}
@@ -112,5 +112,46 @@
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block footer %}
+
+{% if pagination['pages'] > 1 %}
+<nav aria-label="pagination">
+    <ul class="pagination pagination justify-content-center">
+
+        {% for item in pagination['items'] %}
+        {% if item == '&laquo;' %}
+        <li class="page-item">
+            <a class="page-link"
+               href="{{ url_for('book', isbn=book_data[0]['isbn'], page=pagination['page'] - pagination['neighbours_number'] * 2 - 1) }}"
+               aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+
+        {% elif item == '&raquo;' %}
+        <li class="page-item">
+            <a class="page-link"
+               href="{{ url_for('book', isbn=book_data[0]['isbn'], page=pagination['page'] + pagination['neighbours_number'] * 2 + 1) }}"
+               aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+
+        {% elif item == pagination['page'] %}
+        <li class="page-item active"><span class="page-link">{{ item }}</span></li>
+        {% else %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('book', isbn=book_data[0]['isbn'], page=item) }}">{{ item }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+
+    </ul>
+</nav>
+
+{% endif %}
 
 {% endblock %}

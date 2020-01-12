@@ -1,7 +1,6 @@
 import math
-import os
 
-from flask import session, redirect, request, render_template, render_template_string, url_for, flash, jsonify, abort
+from flask import session, redirect, request, render_template, url_for, flash, jsonify, abort
 import requests
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -180,11 +179,15 @@ def search(page):
     return render_template('books.html', books=books, pagination=pagination, query_params=dict(request.args))
 
 
-@app.route('/book/<isbn>', methods=['GET', 'POST'])
+@app.route('/book/<string:isbn>', defaults={'page': 1}, methods=['GET'])
+@app.route('/book/<string:isbn>/<int:page>', methods=['GET'])
 @login_required
-def book(isbn):
-    if request.method == 'GET':
-        book_data = db.execute("SELECT isbn, title, author, year, \
+def book(isbn, page):
+    per_page = 10
+    offset = ((page - 1) * per_page)
+    neighbours_number = 1
+
+    book_data = db.execute("SELECT isbn, title, author, year, \
                                 reviews.rating, reviews.comment, \
                                 TO_CHAR(reviews.created_on, 'DD/MM/YYYY HH24:MI:SS') as created_on, \
                                 users.username \
@@ -192,48 +195,64 @@ def book(isbn):
                                 LEFT JOIN reviews ON reviews.book_isbn = books.isbn \
                                 LEFT JOIN users ON users.id = reviews.user_id \
                                 WHERE books.isbn = :isbn \
-                                ORDER by created_on DESC",
-                               {'isbn': isbn}).fetchall()
+                                ORDER by created_on DESC OFFSET :offset LIMIT :per_page",
+                           {'isbn': isbn,
+                            'offset': offset,
+                            'per_page': per_page
+                            }).fetchall()
 
-        if len(book_data):
-            total_rating = 0
-            for i in range(len(book_data)):
-                book_data[i] = dict(book_data[i])
+    if len(book_data):
+        book_reviews = db.execute("SELECT COUNT(reviews.id) as ratings_count, \
+                                        ROUND(AVG(reviews.rating), 2) as average_rating \
+                                        FROM books \
+                                        LEFT JOIN reviews ON reviews.book_isbn = books.isbn \
+                                        WHERE books.isbn = :isbn",
+                                  {'isbn': isbn}).fetchone()
+
+        for i in range(len(book_data)):
+            book_data[i] = dict(book_data[i])
+            if book_data[i]['created_on'] is not None:
                 book_data[i]['created_on'] = book_data[i]['created_on'].split(' ')
-                total_rating += book_data[i]['rating']
-            rating_data = {
-                'books': {
-                    'average_rating': round(total_rating / len(book_data), 2),
-                    'ratings_count': len(book_data)
-                }
-            }
 
-            # request to Goodreads API
-            try:
-                rating_data['goodreads'] = requests.get('https://www.goodreads.com/book/review_counts.json', params={
-                    'key': app.config['GOODREADS_KEY'],
-                    'isbns': isbn
-                }).json()['books'][0]
-            except Exception:
-                flash('Unfortunately we cannot get information from goodreads.com.', 'warning')
-                rating_data['goodreads'] = None
+        rating_data = {'books': book_reviews}
 
-            # request to Open Library API
-            try:
-                desc_data = requests.get('https://openlibrary.org/api/books', params={
-                    'bibkeys': f'ISBN:{isbn}',
-                    'jscmd': 'details',
-                    'format': 'json'
-                }).json()[f'ISBN:{isbn}']['details']['description']['value'].split('--')
-            except Exception:
-                desc_data = None
+        # request to Goodreads API
+        try:
+            rating_data['goodreads'] = requests.get('https://www.goodreads.com/book/review_counts.json', params={
+                'key': app.config['GOODREADS_KEY'],
+                'isbns': isbn
+            }).json()['books'][0]
+        except Exception:
+            flash('Unfortunately we cannot get information from goodreads.com.', 'warning')
+            rating_data['goodreads'] = None
 
-        else:
-            return abort(404)
+        # request to Open Library API
+        try:
+            desc_data = requests.get('https://openlibrary.org/api/books', params={
+                'bibkeys': f'ISBN:{isbn}',
+                'jscmd': 'details',
+                'format': 'json'
+            }).json()[f'ISBN:{isbn}']['details']['description']['value'].split('--')
+        except Exception:
+            desc_data = None
 
-        return render_template('book.html', book_data=book_data, rating_data=rating_data, desc_data=desc_data)
+    else:
+        return abort(404)
 
-    # POST request
+    pages = int(math.ceil(book_reviews['ratings_count'] / per_page))
+
+    pagination = {'pages': pages,
+                  'items': get_pagination(page, pages, neighbours_number),
+                  'page': page,
+                  'neighbours_number': neighbours_number}
+
+    return render_template('book.html', book_data=book_data, rating_data=rating_data, desc_data=desc_data,
+                           pagination=pagination)
+
+
+@app.route('/book/<string:isbn>', methods=['POST'])
+@login_required
+def create_review(isbn):
     rating = request.form.get('rating')
     comment = request.form.get('comment')
 
@@ -242,10 +261,10 @@ def book(isbn):
         return redirect(url_for('book', isbn=isbn))
 
     review_id = db.execute('INSERT INTO reviews (book_isbn, user_id, rating, comment) \
-                            VALUES (:book_isbn, :user_id, :rating, :comment) \
-                            ON CONFLICT ON CONSTRAINT review_user_book_unique \
-                            DO NOTHING \
-                            RETURNING id',
+                                VALUES (:book_isbn, :user_id, :rating, :comment) \
+                                ON CONFLICT ON CONSTRAINT review_user_book_unique \
+                                DO NOTHING \
+                                RETURNING id',
                            {'book_isbn': isbn,
                             'user_id': session.get('user_id'),
                             'rating': rating,
@@ -258,7 +277,7 @@ def book(isbn):
     return redirect(url_for('book', isbn=isbn))
 
 
-@app.route("/api/<isbn>", methods=['GET'])
+@app.route("/api/<string:isbn>", methods=['GET'])
 def api_book(isbn):
     book_data = db.execute('SELECT isbn, title, author, year, \
                             COUNT(reviews.id) as review_count, \
