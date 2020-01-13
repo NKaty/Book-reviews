@@ -39,13 +39,10 @@
                 <footer class="blockquote-footer">{{ desc_data[1] }}</footer>
             </blockquote>
             {% endif %}
-            <button class="btn btn-info" data-toggle="modal" data-target="#review-modal"
-                    data-isbn="{{ book_data[0]['isbn'] }}">Leave review
-            </button>
+            <button class="btn btn-info" data-toggle="modal" data-target="#review-modal">Leave review</button>
         </div>
     </div>
 </div>
-
 
 <div class="review-list mx-auto mb-3">
     <h4 class="text-secondary mb-4">{{ 'No reviews yet' if book_data[0]['username'] == None else 'Reviews' }}</h4>
@@ -73,7 +70,6 @@
         {% endif %}
     </div>
 </div>
-
 
 <div class="modal fade" id="review-modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -120,7 +116,6 @@
 {% if pagination['pages'] > 1 %}
 <nav aria-label="pagination">
     <ul class="pagination pagination justify-content-center">
-
         {% for item in pagination['items'] %}
         {% if item == '&laquo;' %}
         <li class="page-item">
@@ -148,7 +143,6 @@
         </li>
         {% endif %}
         {% endfor %}
-
     </ul>
 </nav>
 

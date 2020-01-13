@@ -2,8 +2,12 @@
 
 {% block body %}
 
-<h1>404</h1>
-<h1>Not Found</h1>
-<p><a href="{{ url_for('search_form') }}">Back</a></p>
+<div class="error-content text-center mt-n3">
+    <h1 class="text-info display-2">404</h1>
+    <h2 class="text-secondary">We couldn't find this page.</h2>
+    <p class="mt-4">
+        <a class="text-decoration-none btn btn-info" href="{{ url_for('search_form') }}">Return to the search</a>
+    </p>
+</div>
 
 {% endblock %}

@@ -14,11 +14,6 @@ form label.error {
     display: inline-block;
     width: 250px;
     margin: 10px;
-    text-decoration: none;
-}
-
-a.card, a.card:hover {
-    text-decoration: none;
 }
 
 .pagination > li a {
@@ -109,4 +104,11 @@ a.card, a.card:hover {
 .rating-group > input:checked ~ label:hover ~ label,
 .rating-group > label:hover ~ input:checked ~ label {
     color: #c59b08;
+}
+
+.error-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
 }
