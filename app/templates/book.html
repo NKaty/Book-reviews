@@ -6,7 +6,7 @@
     <div class="media">
         <div class="position-relative bg-secondary mr-5 d-none d-sm-block">
             <p class="cover-error text-white text-nowrap">No cover</p>
-            <img src="http://covers.openlibrary.org/b/isbn/{{ book_data[0]['isbn'] }}-L.jpg" alt="Cover">
+            <img src="{{ desc_data['image'] }}" alt="Cover">
         </div>
         <div class="media-body">
             <h2 class="text-info">{{ book_data[0]['title'] }}</h2>
@@ -23,6 +23,12 @@
                     rating_data['goodreads']['work_ratings_count'] }} </h6>
             </div>
             <div class="d-flex">
+                <h6 class="pr-1">google books:</h6>
+                <div class="stars" style="--rating: {{ rating_data['google']['average_rating'] }};">★★★★★</div>
+                <h6 class="pl-1">{{ rating_data['google']['average_rating'] }} ratings {{
+                    rating_data['google']['ratings_count'] }} </h6>
+            </div>
+            <div class="d-flex">
                 <h6 class="pr-1">our rating:</h6>
                 <div class="stars" style="--rating: {{ rating_data['books']['average_rating'] }};">★★★★★</div>
                 <h6 class="pl-1">{{ rating_data['books']['average_rating'] }} ratings {{
@@ -34,10 +40,7 @@
             {% if desc_data == None %}
             <p>There's no description for this book.</p>
             {% else %}
-            <blockquote>
-                <p class="mb-0">{{ desc_data[0] }}</p>
-                <footer class="blockquote-footer">{{ desc_data[1] }}</footer>
-            </blockquote>
+            <p>{{ desc_data['description'] }}</p>
             {% endif %}
             <button class="btn btn-info" data-toggle="modal" data-target="#review-modal">Leave review</button>
         </div>

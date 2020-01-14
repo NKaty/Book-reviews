@@ -214,7 +214,8 @@ def book(isbn, page):
             if book_data[i]['created_on'] is not None:
                 book_data[i]['created_on'] = book_data[i]['created_on'].split(' ')
 
-        rating_data = {'books': book_reviews}
+        rating_data = {'books': dict(book_reviews)}
+        rating_data['books']['average_rating'] = rating_data['books']['average_rating'] or 0
 
         # request to Goodreads API
         try:
@@ -226,15 +227,25 @@ def book(isbn, page):
             flash('Unfortunately we cannot get information from goodreads.com.', 'warning')
             rating_data['goodreads'] = None
 
-        # request to Open Library API
+        # request to Google API
         try:
-            desc_data = requests.get('https://openlibrary.org/api/books', params={
-                'bibkeys': f'ISBN:{isbn}',
-                'jscmd': 'details',
-                'format': 'json'
-            }).json()[f'ISBN:{isbn}']['details']['description']['value'].split('--')
+            book_id = requests.get('https://www.googleapis.com/books/v1/volumes', params={
+                'q': f'isbn:{isbn}'
+            }).json()['items'][0]['id']
+            google_data = requests.get(f'https://www.googleapis.com/books/v1/volumes/{book_id}').json()
         except Exception:
+            flash('Unfortunately we cannot get information from Google Books API.', 'warning')
+            rating_data['google'] = None
             desc_data = None
+        else:
+            rating_data['google'] = {
+                'average_rating': google_data['volumeInfo']['averageRating'],
+                'ratings_count': google_data['volumeInfo']['ratingsCount']
+            }
+            desc_data = {
+                'image': google_data['volumeInfo']['imageLinks']['thumbnail'],
+                'description': google_data['volumeInfo']['description']
+            }
 
     else:
         return abort(404)
