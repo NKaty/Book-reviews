@@ -4,15 +4,21 @@
 
 <div class="d-flex justify-content-center mb-5 mt-4">
     <div class="media">
-        <div class="position-relative bg-secondary mr-5 d-none d-sm-block">
-            <p class="cover-error text-white text-nowrap">No cover</p>
+        <div class="mr-5 d-none d-sm-block">
+            {% if desc_data['image'] == None %}
+            <div class="no-cover bg-secondary">
+                <p class="no-cover-message text-white text-nowrap">No cover</p>
+            </div>
+            {% else %}
             <img src="{{ desc_data['image'] }}" alt="Cover">
+            {% endif %}
         </div>
         <div class="media-body">
             <h2 class="text-info">{{ book_data[0]['title'] }}</h2>
             <h5>written by {{ book_data[0]['author'] }}</h5>
             <h6>published in {{ book_data[0]['year'] }}</h6>
             <h6>ISBN {{ book_data[0]['isbn'] }}</h6>
+            <div class="dropdown-divider my-3"></div>
             {% if rating_data['goodreads'] == None %}
             <h6>goodreads.com: no information</h6>
             {% else %}
@@ -20,24 +26,28 @@
                 <h6 class="pr-1">goodreads.com:</h6>
                 <div class="stars" style="--rating: {{ rating_data['goodreads']['average_rating'] }};">★★★★★</div>
                 <h6 class="pl-1">{{ rating_data['goodreads']['average_rating'] }} ratings {{
-                    rating_data['goodreads']['work_ratings_count'] }} </h6>
+                    rating_data['goodreads']['ratings_count'] }} </h6>
             </div>
+            {% endif %}
+            {% if rating_data['google'] == None %}
+            <h6>google books: no information</h6>
+            {% else %}
             <div class="d-flex">
                 <h6 class="pr-1">google books:</h6>
                 <div class="stars" style="--rating: {{ rating_data['google']['average_rating'] }};">★★★★★</div>
                 <h6 class="pl-1">{{ rating_data['google']['average_rating'] }} ratings {{
                     rating_data['google']['ratings_count'] }} </h6>
             </div>
+            {% endif %}
             <div class="d-flex">
                 <h6 class="pr-1">our rating:</h6>
                 <div class="stars" style="--rating: {{ rating_data['books']['average_rating'] }};">★★★★★</div>
                 <h6 class="pl-1">{{ rating_data['books']['average_rating'] }} ratings {{
                     rating_data['books']['ratings_count'] }} </h6>
             </div>
-            {% endif %}
             <div class="dropdown-divider my-3"></div>
             <h6>About the book</h6>
-            {% if desc_data == None %}
+            {% if desc_data['description'] == None %}
             <p>There's no description for this book.</p>
             {% else %}
             <p>{{ desc_data['description'] }}</p>

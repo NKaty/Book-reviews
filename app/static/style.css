@@ -29,7 +29,13 @@ form label.error {
     max-width: 1000px;
 }
 
-.media .cover-error {
+.no-cover {
+    position: relative;
+    width: 128px;
+    height: 210px;
+}
+
+.no-cover-message {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -37,10 +43,8 @@ form label.error {
 }
 
 .media img {
-    width: 250px;
+    width: 128px;
     height: auto;
-    opacity: 0.99;
-    z-index: 1000;
 }
 
 .review-list {

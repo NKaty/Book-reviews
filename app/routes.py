@@ -1,7 +1,6 @@
 import math
 
 from flask import session, redirect, request, render_template, url_for, flash, jsonify, abort
-import requests
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.application import app, db
@@ -9,6 +8,7 @@ from app.utils.pagination import get_pagination
 from app.utils.login_required_helpers import login_required
 from app.utils.login_user import login_user
 from app.utils.check_signup_form import check_signup_form
+from app.utils.api_requests import make_request_to_goodreads_api, make_request_to_google_books_api
 
 
 @app.route('/')
@@ -188,14 +188,14 @@ def book(isbn, page):
     neighbours_number = 1
 
     book_data = db.execute("SELECT isbn, title, author, year, \
-                                reviews.rating, reviews.comment, \
-                                TO_CHAR(reviews.created_on, 'DD/MM/YYYY HH24:MI:SS') as created_on, \
-                                users.username \
-                                FROM books \
-                                LEFT JOIN reviews ON reviews.book_isbn = books.isbn \
-                                LEFT JOIN users ON users.id = reviews.user_id \
-                                WHERE books.isbn = :isbn \
-                                ORDER by created_on DESC OFFSET :offset LIMIT :per_page",
+                            reviews.rating, reviews.comment, \
+                            TO_CHAR(reviews.created_on, 'DD/MM/YYYY HH24:MI:SS') as created_on, \
+                            users.username \
+                            FROM books \
+                            LEFT JOIN reviews ON reviews.book_isbn = books.isbn \
+                            LEFT JOIN users ON users.id = reviews.user_id \
+                            WHERE books.isbn = :isbn \
+                            ORDER by created_on DESC OFFSET :offset LIMIT :per_page",
                            {'isbn': isbn,
                             'offset': offset,
                             'per_page': per_page
@@ -203,10 +203,10 @@ def book(isbn, page):
 
     if len(book_data):
         book_reviews = db.execute("SELECT COUNT(reviews.id) as ratings_count, \
-                                        ROUND(AVG(reviews.rating), 2) as average_rating \
-                                        FROM books \
-                                        LEFT JOIN reviews ON reviews.book_isbn = books.isbn \
-                                        WHERE books.isbn = :isbn",
+                                    ROUND(AVG(reviews.rating), 2) as average_rating \
+                                    FROM books \
+                                    LEFT JOIN reviews ON reviews.book_isbn = books.isbn \
+                                    WHERE books.isbn = :isbn",
                                   {'isbn': isbn}).fetchone()
 
         for i in range(len(book_data)):
@@ -214,38 +214,14 @@ def book(isbn, page):
             if book_data[i]['created_on'] is not None:
                 book_data[i]['created_on'] = book_data[i]['created_on'].split(' ')
 
-        rating_data = {'books': dict(book_reviews)}
+        rating_data = dict(books=dict(book_reviews))
         rating_data['books']['average_rating'] = rating_data['books']['average_rating'] or 0
 
-        # request to Goodreads API
-        try:
-            rating_data['goodreads'] = requests.get('https://www.goodreads.com/book/review_counts.json', params={
-                'key': app.config['GOODREADS_KEY'],
-                'isbns': isbn
-            }).json()['books'][0]
-        except Exception:
-            flash('Unfortunately we cannot get information from goodreads.com.', 'warning')
-            rating_data['goodreads'] = None
+        # request to Goodreads API to get rating data
+        rating_data['goodreads'] = make_request_to_goodreads_api(isbn)
 
-        # request to Google API
-        try:
-            book_id = requests.get('https://www.googleapis.com/books/v1/volumes', params={
-                'q': f'isbn:{isbn}'
-            }).json()['items'][0]['id']
-            google_data = requests.get(f'https://www.googleapis.com/books/v1/volumes/{book_id}').json()
-        except Exception:
-            flash('Unfortunately we cannot get information from Google Books API.', 'warning')
-            rating_data['google'] = None
-            desc_data = None
-        else:
-            rating_data['google'] = {
-                'average_rating': google_data['volumeInfo']['averageRating'],
-                'ratings_count': google_data['volumeInfo']['ratingsCount']
-            }
-            desc_data = {
-                'image': google_data['volumeInfo']['imageLinks']['thumbnail'],
-                'description': google_data['volumeInfo']['description']
-            }
+        # request to Google API to get rating data, description and image url
+        rating_data['google'], desc_data = make_request_to_google_books_api(isbn)
 
     else:
         return abort(404)
