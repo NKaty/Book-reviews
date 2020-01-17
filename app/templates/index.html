@@ -1,5 +1,39 @@
 {% extends "layout.html" %}
 
 {% block body %}
-    <div>About books</div>
+
+<div class="about-text d-flex mx-auto flex-column">
+    <h1 class="text-info my-4 text-center">Welcome to Book Reviews!</h1>
+    <p class="h6 mt-4">Our mission is to help our users to find the books they would like to read and to share their
+        opinion about books with other readers.</p>
+    <h5 class="text-secondary my-3">Some things you can do on our website:</h5>
+    <p>You can search for a book by ISBN, title, author and year of publication. You will see the list of all the books
+        (with information about ISBN, title, author, year), we are able to find on your request.</p>
+    <p>On the page of each book you can find additional information such as a description, our rating, ratings from a
+        broader audience (Goodreads.com and Google Books) and reviews left by other users on our website. </p>
+    <p>You can write your own review and rate the book on a scale of 1 to 5.</p>
+    <p>To be able to see book details, reviews made by other readers or to leave your own review you have to
+        register for our website and log in.</p>
+    <p>We also have an API endpoint, which allows you to get book information in the JSON format.</p>
+    <h5 class="text-secondary my-3">API information:</h5>
+    <p class="mb-1">Endpoint: /api/{ISBN}</p>
+    <p class="mb-1">Method: GET</p>
+    <p class="mb-0">Success response example:</p>
+    <pre><code>
+    {
+        "title": "Memory",
+        "author": "Doug Lloyd",
+        "year": 2015,
+        "isbn": "1632168146",
+        "review_count": 28,
+        "average_score": 5.0
+    }
+    </code></pre>
+    <p class="mb-0">Error response example (with status code 404 Not found):</p>
+    <pre><code>
+    {
+        'error': 'Invalid book ISBN'
+    }
+    </code></pre>
+</div>
 {% endblock %}

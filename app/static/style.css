@@ -1,3 +1,11 @@
+.about-text {
+    max-width: 1000px;
+}
+
+.about-text p {
+    margin-bottom: 0.6em;
+}
+
 .form-control {
     display: inline-block;
     width: auto;
