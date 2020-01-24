@@ -71,8 +71,12 @@
                     <div class="stars" style="--rating: {{ review['rating'] }};">★★★★★</div>
                 </div>
                 <div class="d-flex">
-                    <small class="text-secondary">{{ review['created_on'][0] }}</small>
-                    <small class="text-secondary d-none d-sm-block pl-1">{{ review['created_on'][1] }}</small>
+                    <small class="text-secondary d-none d-sm-block">
+                        {{ moment(review['created_on']).format('DD/MM/YYYY HH:mm:ss') }}
+                    </small>
+                    <small class="text-secondary d-block d-sm-none">
+                        {{ moment(review['created_on']).format('DD/MM/YYYY') }}
+                    </small>
                 </div>
             </div>
             {% if review['comment'] %}

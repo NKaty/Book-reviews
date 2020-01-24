@@ -1,3 +1,4 @@
+import datetime
 import math
 
 from flask import session, redirect, request, render_template, url_for, flash, jsonify, abort
@@ -187,15 +188,15 @@ def book(isbn, page):
     offset = ((page - 1) * per_page)
     neighbours_number = 1
 
-    book_data = db.execute("SELECT isbn, title, author, year, \
+    book_data = db.execute('SELECT isbn, title, author, year, \
                             reviews.rating, reviews.comment, \
-                            TO_CHAR(reviews.created_on, 'DD/MM/YYYY HH24:MI:SS') as created_on, \
+                            TO_CHAR(reviews.created_on, \'YYYY-MM-DD"T"HH24:MI:SS"Z"\') as created_on, \
                             users.username \
                             FROM books \
                             LEFT JOIN reviews ON reviews.book_isbn = books.isbn \
                             LEFT JOIN users ON users.id = reviews.user_id \
                             WHERE books.isbn = :isbn \
-                            ORDER by created_on DESC OFFSET :offset LIMIT :per_page",
+                            ORDER by created_on DESC OFFSET :offset LIMIT :per_page',
                            {'isbn': isbn,
                             'offset': offset,
                             'per_page': per_page
@@ -212,7 +213,8 @@ def book(isbn, page):
         for i in range(len(book_data)):
             book_data[i] = dict(book_data[i])
             if book_data[i]['created_on'] is not None:
-                book_data[i]['created_on'] = book_data[i]['created_on'].split(' ')
+                book_data[i]['created_on'] = datetime.datetime.strptime(book_data[i]['created_on'],
+                                                                        '%Y-%m-%dT%H:%M:%S%z')
 
         rating_data = dict(books=dict(book_reviews))
         rating_data['books']['average_rating'] = rating_data['books']['average_rating'] or 0
@@ -248,10 +250,10 @@ def create_review(isbn):
         return redirect(url_for('book', isbn=isbn))
 
     review_id = db.execute('INSERT INTO reviews (book_isbn, user_id, rating, comment) \
-                                VALUES (:book_isbn, :user_id, :rating, :comment) \
-                                ON CONFLICT ON CONSTRAINT review_user_book_unique \
-                                DO NOTHING \
-                                RETURNING id',
+                            VALUES (:book_isbn, :user_id, :rating, :comment) \
+                            ON CONFLICT ON CONSTRAINT review_user_book_unique \
+                            DO NOTHING \
+                            RETURNING id',
                            {'book_isbn': isbn,
                             'user_id': session.get('user_id'),
                             'rating': rating,
