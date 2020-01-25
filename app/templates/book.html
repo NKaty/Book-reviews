@@ -24,27 +24,27 @@
             {% if rating_data['goodreads'] == None %}
             <h6>goodreads.com: no information</h6>
             {% else %}
-            <div class="d-flex">
-                <h6 class="pr-1">goodreads.com:</h6>
-                <div class="stars" style="--rating: {{ rating_data['goodreads']['average_rating'] }};">★★★★★</div>
-                <h6 class="pl-1">{{ rating_data['goodreads']['average_rating'] }} ratings {{
+            <div class="mb-1">
+                <h6 class="d-inline pr-1">goodreads.com:</h6>
+                <div class="d-inline stars" style="--rating: {{ rating_data['goodreads']['average_rating'] }};">★★★★★</div>
+                <h6 class="d-inline pl-1">{{ rating_data['goodreads']['average_rating'] }} ratings {{
                     rating_data['goodreads']['ratings_count'] }} </h6>
             </div>
             {% endif %}
             {% if rating_data['google'] == None %}
             <h6>google books: no information</h6>
             {% else %}
-            <div class="d-flex">
-                <h6 class="pr-1">google books:</h6>
-                <div class="stars" style="--rating: {{ rating_data['google']['average_rating'] }};">★★★★★</div>
-                <h6 class="pl-1">{{ rating_data['google']['average_rating'] }} ratings {{
+            <div class="mb-1">
+                <h6 class="d-inline pr-1">google books:</h6>
+                <div class="d-inline stars" style="--rating: {{ rating_data['google']['average_rating'] }};">★★★★★</div>
+                <h6 class="d-inline pl-1">{{ rating_data['google']['average_rating'] }} ratings {{
                     rating_data['google']['ratings_count'] }} </h6>
             </div>
             {% endif %}
-            <div class="d-flex">
-                <h6 class="pr-1">book reviews rating:</h6>
-                <div class="stars" style="--rating: {{ rating_data['books']['average_rating'] }};">★★★★★</div>
-                <h6 class="pl-1">{{ rating_data['books']['average_rating'] }} ratings {{
+            <div>
+                <h6 class="d-inline pr-1">book reviews rating:</h6>
+                <div class="d-inline stars" style="--rating: {{ rating_data['books']['average_rating'] }};">★★★★★</div>
+                <h6 class="d-inline pl-1">{{ rating_data['books']['average_rating'] }} ratings {{
                     rating_data['books']['ratings_count'] }} </h6>
             </div>
             <div class="dropdown-divider my-3"></div>
