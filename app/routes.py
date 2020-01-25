@@ -189,8 +189,7 @@ def book(isbn, page):
     neighbours_number = 1
 
     book_data = db.execute('SELECT isbn, title, author, year, \
-                            reviews.rating, reviews.comment, \
-                            TO_CHAR(reviews.created_on, \'YYYY-MM-DD"T"HH24:MI:SS"Z"\') as created_on, \
+                            reviews.rating, reviews.comment, reviews.created_on, \
                             users.username \
                             FROM books \
                             LEFT JOIN reviews ON reviews.book_isbn = books.isbn \
@@ -209,12 +208,6 @@ def book(isbn, page):
                                     LEFT JOIN reviews ON reviews.book_isbn = books.isbn \
                                     WHERE books.isbn = :isbn",
                                   {'isbn': isbn}).fetchone()
-
-        for i in range(len(book_data)):
-            book_data[i] = dict(book_data[i])
-            if book_data[i]['created_on'] is not None:
-                book_data[i]['created_on'] = datetime.datetime.strptime(book_data[i]['created_on'],
-                                                                        '%Y-%m-%dT%H:%M:%S%z')
 
         rating_data = dict(books=dict(book_reviews))
         rating_data['books']['average_rating'] = rating_data['books']['average_rating'] or 0
@@ -249,15 +242,17 @@ def create_review(isbn):
         flash('You must provide your rating for the book!', 'danger')
         return redirect(url_for('book', isbn=isbn))
 
-    review_id = db.execute('INSERT INTO reviews (book_isbn, user_id, rating, comment) \
-                            VALUES (:book_isbn, :user_id, :rating, :comment) \
+    review_id = db.execute('INSERT INTO reviews (book_isbn, user_id, rating, comment, created_on) \
+                            VALUES (:book_isbn, :user_id, :rating, :comment, :created_on) \
                             ON CONFLICT ON CONSTRAINT review_user_book_unique \
                             DO NOTHING \
                             RETURNING id',
                            {'book_isbn': isbn,
                             'user_id': session.get('user_id'),
                             'rating': rating,
-                            'comment': comment}).fetchone()
+                            'comment': comment,
+                            'created_on': datetime.datetime.utcnow()}).fetchone()
+
     db.commit()
 
     if review_id is None:

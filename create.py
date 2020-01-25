@@ -24,7 +24,7 @@ def main():
                                         user_id INTEGER REFERENCES users NOT NULL, \
                                         rating SMALLINT NOT NULL CHECK (rating <= 5 AND rating >= 1), \
                                         comment VARCHAR, \
-                                        created_on TIMESTAMP NOT NULL DEFAULT NOW(), \
+                                        created_on TIMESTAMP NOT NULL, \
                                         CONSTRAINT review_user_book_unique UNIQUE (book_isbn, user_id))')
     print('The table "reviews" is created.')
 
