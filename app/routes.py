@@ -31,7 +31,7 @@ def signup():
 
     if len(error_messages := check_signup_form(username, password, conf_password)):
         flash(' '.join(error_messages), 'danger')
-        return render_template('signup.html')
+        return redirect(url_for('signup'))
 
     user = db.execute('INSERT INTO users (username, password) \
                         VALUES (:username, :password) \
@@ -43,7 +43,7 @@ def signup():
 
     if user is None:
         flash('That username is already taken. Please, choose another username!', 'danger')
-        return render_template('signup.html')
+        return redirect(url_for('signup'))
 
     next_url = login_user(session, user)
 
@@ -65,13 +65,13 @@ def login():
 
     if not username or not password:
         flash('All fields of the form must be filled in!', 'danger')
-        return render_template('login.html')
+        return redirect(url_for('login'))
 
     user = db.execute('SELECT * FROM users WHERE username = :username', {'username': username}).fetchone()
 
     if user is None or not check_password_hash(user.password, password):
         flash('Invalid password or username!', 'danger')
-        return render_template('login.html')
+        return redirect(url_for('login'))
 
     next_url = login_user(session, user)
 
