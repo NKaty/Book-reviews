@@ -4,7 +4,7 @@
 
 Link to the course: https://www.edx.org/course/cs50s-web-programming-with-python-and-javascript
 
-Link to the app on Heroku: https://book-reviews-flask.herokuapp.com (to see the full example with reviews, search for the book The Great Book of Amber by Roger Zelazny ISBN 0380809060)
+Link to the app: https://book-reviews-8ikh.onrender.com (to see the full example with reviews, search for the book The Great Book of Amber by Roger Zelazny ISBN 0380809060)
 
 #### Requirements
 
